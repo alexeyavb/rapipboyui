@@ -1,0 +1,17 @@
+{
+	"files.exclude": {
+		"**/.git": true,
+		"**/.svn": true,
+		"**/.hg": true,
+		"**/CVS": true,
+		"**/.DS_Store": true,
+		"**/*.o": true,
+		"**/*.exe": true,
+	},
+	"files.associations": {
+		"time.h": "c",
+		"global_variables.h": "c",
+		"linux_evthread.h": "c",
+		"raylib.h": "c"
+	}
+}

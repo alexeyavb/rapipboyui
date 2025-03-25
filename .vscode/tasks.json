@@ -1,0 +1,75 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build debug",
+            "type": "process",
+            "command": "make",
+            "args": [
+                "PLATFORM=PLATFORM_DRM",
+                "BUILD_MODE=DEBUG",
+                "PROJECT_NAME=${workspaceFolderBasename}",  
+                "LINUX=1",
+            ],
+            
+            "windows": {
+                "command": "mingw32-make.exe",
+                "args": [
+                    "RAYLIB_PATH=C:/raylib/raylib",
+                    "PROJECT_NAME=${workspaceFolderBasename}",
+                    "BUILD_MODE=DEBUG",
+                    "WUNDOWS=1",
+                ],
+            },
+            "osx": {
+                "args": [
+                    "RAYLIB_PATH=<path_to_raylib>/raylib",
+                    "PROJECT_NAME=${workspaceFolderBasename}",
+                    "BUILD_MODE=DEBUG",
+                    "DARWIN=1",
+                ],
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+        },
+        {
+            "label": "build release",
+            "type": "process",
+            "command": "make",
+            "args": [
+                "PLATFORM=PLATFORM_DRM",
+                "PROJECT_NAME=${workspaceFolderBasename}",
+                "BUILD_MODE=RELEASE",
+                "LINUX=1"
+        ],
+            "windows": {
+                "command": "mingw32-make.exe",
+                "args": [
+                    "RAYLIB_PATH=C:/raylib/raylib",
+                    "PROJECT_NAME=${workspaceFolderBasename}",
+                    "BUILD_MODE=RELEASE",
+                    "WINDOWS=1"
+                ],
+            },
+            "osx": {
+                "args": [
+                    "PLATFORM=PLATFORM_DRM",
+                    "PROJECT_NAME=${workspaceFolderBasename}",
+                    "BUILD_MODE=RELEASE",
+                    "DARWIN=1",
+                ],
+            },
+            "group": "build",
+            "problemMatcher": [
+                "$gcc"
+            ],
+        },
+    ],
+}
