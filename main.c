@@ -14,7 +14,8 @@
 #include "loader_thread.h"
 #include "simple_thread.h"
 #include "linux_evthread.h"
-
+#include "linux_i2c_thread.h"
+#include "local_timers.h"
 #include "main.h"
 
 
@@ -42,7 +43,11 @@ int worked_pip_main (void)
 	simple_thread_init();
 	
 	// Run Event thread immediatelly
-	EventThread_Init();
+	// EventThread_Init();
+	
+	I2C_Thread_Init();
+
+
 
 	// Font ru_font = LoadFont("fonts/dejavu.fnt");
 	Font ru_font = LoadCyrillicTTF("fonts/Microsoft Sans Serif.ttf", 12); 	
@@ -63,6 +68,9 @@ int worked_pip_main (void)
 	// Simple thread step 2 run
 	simple_thread_run();
 
+	int staytime = 6000ul;
+	int startTick = GetTickCountMs() + staytime + 500;
+	bool lShowLogo = true;
 
 	while (!WindowShouldClose())		// run the loop untill the user presses ESCAPE or presses the Close button on the window
 	{
@@ -70,9 +78,12 @@ int worked_pip_main (void)
 		BeginDrawing();
 		// Setup the back buffer for drawing (clear color and depth buffers)
 		ClearBackground(BLACK);		
+		if(lShowLogo){
+			DrawTexture(wabbit, 0, 0, GREEN);			
+		}
 
-		DrawTexture(wabbit, 0, 0, GREEN);		
-		DrawTextBoxed(ru_font, text, rec, fontSize, spacing, wordWrap, tint);        
+		DrawTextBoxed(ru_font, text, rec, fontSize, spacing, wordWrap, tint);        	
+
 		// progress bar
 		checkThreadState();
 		drawRuller();
@@ -82,14 +93,22 @@ int worked_pip_main (void)
 		// RotateModelProc();
 		// renderCameraProc();
 		// end bmr
+
 		DrawFPS(FPS_X_POS, FPS_Y_POS);
+		
+		if(GetTickCountMs()  >= startTick )
+			lShowLogo = false;
+		
 		EndDrawing();
+		
 	}
 
 	// cleanup
 	// stop poll devices event thread
+	i2c_thread_running = false;
 	event_thread_running = false;	
 	simple_thread_running = false;
+
 	// unload our texture so it can be cleaned up
 	UnloadTexture(wabbit);
 	// destroy the window and cleanup the OpenGL context

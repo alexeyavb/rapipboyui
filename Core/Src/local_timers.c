@@ -1,16 +1,4 @@
-#include <stdint.h>
 #ifdef LINUX
-
-/*
-#ifndef _POSIX_C_SOURCE
-#define _POSIX_C_SOURCE 200112L
-#endif
-
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE
-#endif
-*/
-    #define _DEFAULT_SOURCE 1    
     #include <stdint.h>
     #include <linux/types.h>
     #include <linux/time.h>

@@ -12,6 +12,8 @@
 		"time.h": "c",
 		"global_variables.h": "c",
 		"linux_evthread.h": "c",
-		"raylib.h": "c"
+		"raylib.h": "c",
+		"local_timers.h": "c",
+		"struct_timespec.h": "c"
 	}
 }

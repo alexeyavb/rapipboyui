@@ -25,9 +25,10 @@ extern ruller_estate loader_ruller_state;
 #define FPS_Y_POS 0u
 extern int framesCounter;
 
-
 // Global threads loop flags 
 extern bool event_thread_running;
 extern bool simple_thread_running;
+extern bool i2c_thread_running;
+
 
 #endif // !__GLOBAL_VARIABLES_H__

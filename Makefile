@@ -59,7 +59,7 @@ C_SOURCES =  \
 	Core/Src/loader_thread.c \
 	Core/Src/simple_thread.c \
 	Core/Src/global_variables.c \
-
+	Core/Src/linux_i2c_thread.c
 
 # C_SOURCES += $(call rwildcard, Core/Src, *.c)
 
@@ -135,7 +135,7 @@ ifeq ($(UNAME_S),Linux)
 	C_INCLUDES += -I/usr/include/libdrm -I/usr/include/GLES3 -I/usr/include/EGL
 
 	LDLIBS += -lraylib -lGLESv2 -lEGL -lpthread -lrt -lm -lgbm -ldrm -ldl -latomic
-	LDLIBS += -luuid -lm
+	LDLIBS += -luuid -lm -li2c
 	
 	# Explicit link to libc
 	ifeq ($(RAYLIB_LIBTYPE),SHARED)
