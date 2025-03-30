@@ -130,7 +130,7 @@ int I2C_polldevices(struct input_event* inp_data, int inp_size){
             return 3;
         }        
     }
-    
+    UNUSED(inp_data); UNUSED(inp_size);
 
     // /* Using I2C Write, equivalent of 
     //          i2c_smbus_write_word_data(file,register,0x6543) */
