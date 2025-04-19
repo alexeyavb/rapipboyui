@@ -18,6 +18,8 @@
 
 #define MSG_DELAY_MSEC 6000
 static long next_message = 0;
+static bool protocol_check = false;
+
 extern void* I2C_threadproc(void *data);
 
 
@@ -44,6 +46,17 @@ int i2c_dev = -1;
 #define I2C_DEVICE_ADDR 0x2c
 
 static const char* i2c_devname = (char*)I2C_DEVICE;
+
+/// @brief  Example a get localtime and print this in human readable format
+/// @param  none
+static inline void getandprintime(void){
+    #define EPOCH_START 1900u
+    #define MONTH_OFFSET 0x01u
+    time_t t = time(NULL);
+    struct tm tm = *localtime(&t);
+    printf("now: %d-%02d-%02d %02d:%02d:%02d\n", tm.tm_year + EPOCH_START, tm.tm_mon + MONTH_OFFSET, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);    
+}
+
 /*
 **	@brief		:	Open i2c bus
 **	#bus_name	:	i2c bus name such as: /dev/i2c-1
@@ -129,8 +142,73 @@ int I2C_polldevices(struct input_event* inp_data, int inp_size){
             i2c_thread_running = false; // break loop
             return 3;
         }        
+        else{
+            if(!protocol_check){
+                TraceLog(LOG_INFO, "%s Protocol version rcvd, wait >= %#02x, recv %#02x", MODULE_INFO, min_protocol_version, res);
+                protocol_check = true;
+            }
+        }
     }
-    UNUSED(inp_data); UNUSED(inp_size);
+
+    // protocol is ok, read timestamp and check local/remote time
+    bool time_is_sync = false;
+    __u8 ts_control_register    = 0x09;
+    __u8 ts_sec_register        = 0x02;
+    __u8 ts_min_register        = 0x03;
+    __u8 ts_hour_register       = 0x04;
+    __u8 ts_day_register        = 0x05;
+    __u8 ts_month_register      = 0x07;
+    __u8 ts_year_register       = 0x08;
+
+    if(protocol_check){        
+        res = i2c_smbus_read_byte_data(i2c_dev, ts_control_register);
+        // Rcvd handshake
+        if(res == 0xAA){
+            __u8 msec, sec, min, hours, date, month, year;
+            msec = i2c_smbus_read_byte_data(i2c_dev, 0x01);
+            sec = i2c_smbus_read_byte_data(i2c_dev, ts_sec_register);
+            min = i2c_smbus_read_byte_data(i2c_dev, ts_min_register);
+            hours = i2c_smbus_read_byte_data(i2c_dev, ts_hour_register);
+            date = i2c_smbus_read_byte_data(i2c_dev, ts_day_register);
+            month = i2c_smbus_read_byte_data(i2c_dev, ts_month_register);
+            year = i2c_smbus_read_byte_data(i2c_dev, ts_year_register);
+
+            // get local time
+
+            time_t t = time (NULL);
+            struct tm* lt = localtime (&t);
+            __u8 lmsec, lsec, lmin, lhours, ldate, lmonth, lyear;
+            lmsec = 0x00;
+            lsec = lt->tm_sec;
+            lmin = lt->tm_min;
+            lhours = lt->tm_hour;
+            ldate = lt->tm_mday;
+            lmonth = lt->tm_mon + 1;
+            lyear = 1900 + lt->tm_year - 2000;
+
+            // check mcu and local time
+            if(!(
+                    sec == lsec
+                    && min == lmin
+                    && hours == lhours
+                    && date == ldate 
+                    && month == lmonth
+                    && year == lyear
+                )
+            ){
+                time_is_sync = true;
+                i2c_smbus_write_byte_data(i2c_dev, ts_control_register, 0xBB);
+                i2c_smbus_write_byte_data(i2c_dev, ts_sec_register, lsec);
+                i2c_smbus_write_byte_data(i2c_dev, ts_min_register, lmin);
+                i2c_smbus_write_byte_data(i2c_dev, ts_hour_register, lhours);
+                i2c_smbus_write_byte_data(i2c_dev, ts_day_register, ldate);
+                i2c_smbus_write_byte_data(i2c_dev, ts_month_register, lmonth);
+                i2c_smbus_write_byte_data(i2c_dev, ts_year_register, lyear);
+            }
+            // UNUSED(msec); UNUSED(lmsec);
+        }
+    }
+    // UNUSED(inp_data); UNUSED(inp_size);
 
     // /* Using I2C Write, equivalent of 
     //          i2c_smbus_write_word_data(file,register,0x6543) */
@@ -211,7 +289,7 @@ void* I2C_threadproc(void *data){
             next_message = GetTickCountMs() + (MSG_DELAY_MSEC);
         }
         pthread_mutex_lock(&I2C_poll_mutex);
-        I2C_polldevices(inp_data, inp_size);
+        I2C_polldevices(inp_data, inp_size);        
         pthread_mutex_unlock(&I2C_poll_mutex);
     }
 
@@ -219,3 +297,4 @@ void* I2C_threadproc(void *data){
     TraceLog(LOG_INFO, "%s Exiting from i2c thread proc ", MODULE_INFO);
     return 0;
 }
+

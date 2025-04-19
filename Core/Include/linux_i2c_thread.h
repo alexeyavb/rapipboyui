@@ -15,4 +15,5 @@
 
 
 extern void I2C_Thread_Init(void);
+
 #endif
